@@ -124,8 +124,8 @@ func (b *ferrariBuilder) getCar() car {
 //------------------------------------------------------------------------------------------
 
 func main() {
-	ladaCarBuilder := newLadaBuilder()
-	ferrariCarBuildder := newFerrariBuilder()
+	ladaCarBuilder := getBuilder("lada")
+	ferrariCarBuilder := getBuilder("ferrari")
 
 	ladaCarBuilder.setEngine()
 	ladaCarBuilder.setBrand()
@@ -133,9 +133,9 @@ func main() {
 	car := ladaCarBuilder.getCar()
 	fmt.Printf("%s has engine - %1.1f, Premium - %v\n", car.brand, car.engine, car.premium)
 
-	ferrariCarBuildder.setEngine()
-	ferrariCarBuildder.setBrand()
-	ferrariCarBuildder.setPremium()
-	car = ferrariCarBuildder.getCar()
+	ferrariCarBuilder.setEngine()
+	ferrariCarBuilder.setBrand()
+	ferrariCarBuilder.setPremium()
+	car = ferrariCarBuilder.getCar()
 	fmt.Printf("%s has engine - %1.1f, Premium - %v\n", car.brand, car.engine, car.premium)
 }
