@@ -10,9 +10,20 @@ import (
 	"strings"
 )
 
+/*
+Реализовать утилиту аналог консольной команды cut (man cut).
+Утилита должна принимать строки через STDIN, разбивать по разделителю (TAB) на колонки и выводить запрошенные.
+
+Реализовать поддержку утилитой следующих ключей:
+-f - "fields" - выбрать поля (колонки)
+-d - "delimiter" - использовать другой разделитель
+-s - "separated" - только строки с разделителем
+
+*/
+
 func cut(fields string, delimiter string, separated bool) {
 	scanner := bufio.NewScanner(os.Stdin)
-
+	// Парсим столбцы, которые просят вывести
 	field := strings.Split(fields, ",")
 	var fieldsP []int
 	for _, v := range field {
@@ -23,6 +34,7 @@ func cut(fields string, delimiter string, separated bool) {
 		fieldsP = append(fieldsP, strInt)
 	}
 
+	// Бесконечный цикл для ввода текста
 	for {
 		ok := scanner.Scan()
 		if !ok && scanner.Err() == nil {

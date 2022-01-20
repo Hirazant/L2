@@ -12,6 +12,39 @@ import (
 	"time"
 )
 
+/*
+
+Реализовать HTTP-сервер для работы с календарем. В рамках задания необходимо работать строго со стандартной HTTP-библиотекой.
+
+В рамках задания необходимо:
+Реализовать вспомогательные функции для сериализации объектов доменной области в JSON.
+Реализовать вспомогательные функции для парсинга и валидации параметров методов /create_event и /update_event.
+Реализовать HTTP обработчики для каждого из методов API, используя вспомогательные функции и объекты доменной области.
+Реализовать middleware для логирования запросов
+
+
+Методы API:
+POST /create_event
+POST /update_event
+POST /delete_event
+GET /events_for_day
+GET /events_for_week
+GET /events_for_month
+
+Параметры передаются в виде www-url-form-encoded (т.е. обычные user_id=3&date=2019-09-09). В GET методах параметры
+передаются через queryString, в POST через тело запроса.
+В результате каждого запроса должен возвращаться JSON-документ содержащий либо {"result": "..."} в случае успешного
+выполнения метода, либо {"error": "..."} в случае ошибки бизнес-логики.
+
+В рамках задачи необходимо:
+Реализовать все методы.
+Бизнес логика НЕ должна зависеть от кода HTTP сервера.
+В случае ошибки бизнес-логики сервер должен возвращать HTTP 503. В случае ошибки входных данных
+(невалидный int например) сервер должен возвращать HTTP 400. В случае остальных ошибок сервер должен
+возвращать HTTP 500. Web-сервер должен запускаться на порту указанном в конфиге и выводить в лог каждый обработанный запрос.
+
+*/
+
 const layout = "2006-01-02"
 
 type customDate struct {
@@ -41,7 +74,7 @@ type Event struct {
 	Description string     `json:"description"`
 }
 
-// EventStore
+// EventStore хранит Евенты в мапе, где ключ - id юзера
 type EventStore struct {
 	Events map[int][]Event
 }
@@ -129,7 +162,7 @@ func (s *EventStore) getEventForMonth() ([]Event, error) {
 	return res, nil
 }
 
-func sendJsonRequest(w http.ResponseWriter, status int, message string, types string) {
+func sendJSONRequest(w http.ResponseWriter, status int, message string, types string) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	if types == "Error" {
@@ -146,7 +179,7 @@ func sendJsonRequest(w http.ResponseWriter, status int, message string, types st
 	}
 }
 
-func sendJsonEvents(w http.ResponseWriter, status int, events []Event) {
+func sendJSONEvents(w http.ResponseWriter, status int, events []Event) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
 	data := struct {
@@ -155,7 +188,7 @@ func sendJsonEvents(w http.ResponseWriter, status int, events []Event) {
 	json.NewEncoder(w).Encode(data)
 }
 
-// Service
+// Service обработчик запросов
 type Service struct {
 	Events EventStore
 }
@@ -166,70 +199,70 @@ func newService(store EventStore) *Service {
 
 func (s *Service) createEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	var event Event
 	err = json.Unmarshal(body, &event)
 	if err != nil {
-		sendJsonRequest(w, 400, "error json input", "Error")
+		sendJSONRequest(w, 400, "error json input", "Error")
 		return
 	}
 
 	s.Events.create(event)
-	sendJsonRequest(w, 200, "event add", "Changes")
+	sendJSONRequest(w, 200, "event add", "Changes")
 
 }
 
 func (s *Service) updateEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	var event []Event
 	err = json.Unmarshal(body, &event)
 	if err != nil {
-		sendJsonRequest(w, 400, "error json input", "Error")
+		sendJSONRequest(w, 400, "error json input", "Error")
 		return
 	}
 	err = s.Events.update(event[0], event[1])
 	if err != nil {
 		return
 	}
-	sendJsonRequest(w, 200, "event update", "Changes")
+	sendJSONRequest(w, 200, "event update", "Changes")
 
 }
 
 func (s *Service) deleteEvent(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	body, err := ioutil.ReadAll(r.Body)
 	if err != nil {
-		sendJsonRequest(w, 500, "error methods", "Error")
+		sendJSONRequest(w, 500, "error methods", "Error")
 		return
 	}
 
 	var event Event
 	err = json.Unmarshal(body, &event)
 	if err != nil {
-		sendJsonRequest(w, 400, "error json input", "Error")
+		sendJSONRequest(w, 400, "error json input", "Error")
 		return
 	}
 
@@ -237,7 +270,7 @@ func (s *Service) deleteEvent(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	sendJsonRequest(w, 200, "event delete", "Changes")
+	sendJSONRequest(w, 200, "event delete", "Changes")
 
 }
 
@@ -246,7 +279,7 @@ func (s *Service) eventsForDay(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	sendJsonEvents(w, 200, day)
+	sendJSONEvents(w, 200, day)
 }
 
 func (s *Service) eventsForWeek(w http.ResponseWriter, r *http.Request) {
@@ -254,7 +287,7 @@ func (s *Service) eventsForWeek(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	sendJsonEvents(w, 200, week)
+	sendJSONEvents(w, 200, week)
 }
 
 func (s *Service) eventsForMonth(w http.ResponseWriter, r *http.Request) {
@@ -262,10 +295,10 @@ func (s *Service) eventsForMonth(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		return
 	}
-	sendJsonEvents(w, 200, month)
+	sendJSONEvents(w, 200, month)
 }
 
-// Handler
+// Handler функция переадресующая http запросы
 func Handler(port string) {
 	eventStore := newEventStore()
 	service := newService(*eventStore)
@@ -294,6 +327,7 @@ func main() {
 	Handler(conf.Port)
 }
 
+// ЛОггер запросов
 func middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		log.Println(r.URL.Path)
