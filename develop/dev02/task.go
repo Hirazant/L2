@@ -5,6 +5,25 @@ import (
 	"os"
 )
 
+/*Создать Go-функцию, осуществляющую примитивную распаковку строки, содержащую повторяющиеся символы/руны, например:
+"a4bc2d5e" => "aaaabccddddde"
+"abcd" => "abcd"
+"45" => "" (некорректная строка)
+"" => ""
+
+Дополнительно
+Реализовать поддержку escape-последовательностей.
+Например:
+qwe\4\5 => qwe45 (*)
+qwe\45 => qwe44444 (*)
+qwe\\5 => qwe\\\\\ (*)
+
+
+В случае если была передана некорректная строка, функция должна возвращать ошибку. Написать unit-тесты.
+
+*/
+
+//Проверяем, что первый символ не цифра
 func checkFist(runeStr []rune) error {
 	if runeStr[0] >= 49 && runeStr[0] <= 57 {
 		return fmt.Errorf("invalid string")
@@ -12,6 +31,7 @@ func checkFist(runeStr []rune) error {
 	return nil
 }
 
+// Удаляем элемент, который будем распаковывать
 func deleteFromSlice(sl []rune, index int) []rune {
 	// Удалить элемент по индексу i из a.
 	// 1. Выполнить сдвиг a[i+1:] влево на один индекс.
@@ -21,6 +41,7 @@ func deleteFromSlice(sl []rune, index int) []rune {
 	return sl
 }
 
+// Вспомогательная функция, возвращает n символов
 func addSymbols(symb rune, count int) []rune {
 	var runeSl []rune
 	for i := 0; i < count; i++ {
@@ -56,6 +77,10 @@ func unpack(str string) string {
 }
 
 func main() {
-	str := `2d2`
+	str := `dsf4fd`
+	if str == "" {
+		fmt.Println("")
+		return
+	}
 	fmt.Println(unpack(str))
 }
